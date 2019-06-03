@@ -1,0 +1,11 @@
+const http = require('http');
+const app = require('../app');
+
+let port = parseInt(process.env.PORT, 10) || 5500;
+app.set('port', port);
+
+
+//entry point for http request
+let server = http.createServer(app);
+server.listen(port);
+
