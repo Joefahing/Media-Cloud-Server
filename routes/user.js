@@ -1,14 +1,8 @@
-const express = import('express');
+const express = require('express');
 const router = express.Router();
+const user = require('../controllers').user;
 
-router.post('/', (req, res, next) => {
-    const user = req.body.user;
-    res.status(200).send({
-        result: {
-            message: "Recieved user",
-            user,
-        }
-    })
-})
 
+router.post('/register', user.create);
+router.post('/login', user.get);
 module.exports = router;
