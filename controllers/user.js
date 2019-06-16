@@ -2,6 +2,11 @@ const models = require('../models');
 const bcrypt = require('bcrypt');
 const validator = require('email-validator');
 
+/**
+ * Future Goal:
+ * Cookie response should application with more configuration
+ */
+
 const findByEmail = (email) => {
 
     return new Promise((resolve) => {
@@ -32,6 +37,7 @@ module.exports = {
                     next(error);
                 }
     
+                
                 bcrypt.hash(user.password, 10, (err, hash) => {
                     models.User.create({email: user.email, password: hash})
                     .then(newUser => {
@@ -47,6 +53,7 @@ module.exports = {
                 next(error);
             }
         })
+        .catch(err => next(err))
     },
 
     get: (req, res, next) =>{
@@ -60,17 +67,20 @@ module.exports = {
                 next(error);
 
             }else{
-                bcrypt.compare(password, user.password, (err, result)=>{
+                user.isValidPassword(password)
+                .then(result => {
                     if(!result){
                         const error = new Error('Invalid Password');
                         error.status = 403;
                         next(error);
                     }else{
-                        res.status(400).send(user);
+        
+                        res.cookie('token', user.generateJWT(), {httpOnly: true}).sendStatus(200);
                     }
-                });
+                })
             }
-        });
+        })
+        .catch(err => next(err) );
         
     }
 }

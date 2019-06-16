@@ -2,16 +2,22 @@ const express = require('express');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const user = require('./routes/user')
+const cookieParser = require('cookie-parser');
+const user = require('./routes/user');
+const sample = require('./routes/sample');
 
 const app = express(); 
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 app.use(cors());
 
+
+
 app.use('/user', user);
+app.use('/api', sample);
 
 app.use(function (req, res, next){
     let error = new Error('Not found');
