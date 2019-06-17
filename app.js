@@ -5,6 +5,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const user = require('./routes/user');
 const sample = require('./routes/sample');
+require('./config/passport')
 
 const app = express(); 
 

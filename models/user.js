@@ -25,6 +25,10 @@ module.exports = (sequelize, DataTypes) => {
     }) 
   }
 
+  User.prototype.isValidPasswordSync = function(password){
+    return bcrypt.compareSync(password, this.password);
+  }
+
   User.prototype.generateJWT = function(){
       const payload = {
         id: this.id,
@@ -33,6 +37,16 @@ module.exports = (sequelize, DataTypes) => {
       
       const exp = 600;
       return jwt.sign(payload, JWT_SECRET, {expiresIn: '1h'});
+  }
+
+  User.prototype.authJWT = function(){
+      return {
+        id:  this.id,
+        email: this.email,
+        createdAt: this.createdAt,
+        updatedAt: this.updatedAt,
+        token: this.generateJWT(),
+      }
   }
   return User;
 };

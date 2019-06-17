@@ -1,30 +1,36 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = require('./config/index').JWT_SECRET;
+const secret = require('./config/index').JWT_SECRET;
 
-const withAuth = (req, res, next) => {
-    const token = 
-        req.body.token ||
-        req.query.token ||
-        req.header['x-access-token'] ||
-        req.cookies.token;
+const jwtAuth = (req, res, next) => {
+   
+    const token = getBearerToken(req);
+    const error = new Error('Invalid Token');
+    error.status = 401;
 
-    if(!token){
-        const err =  new Error('Unauthorize: no token');
-        err.status = 401;
-        next(err);
-
-    }else{
-        jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if(token){
+        jwt.verify(token, secret, (err, decode)=>{
             if(err){
-                const err =  new Error('Unauthorize: invalid token');
-                err.status = 401;
-                next(err)
+                next(error);
             }else{
-                req.email = decoded.email;
-                next()
+                req.email = decode.email;
+                next();
             }
         })
+    }else{
+        next(error)
     }
 }
 
-module.exports = withAuth;
+const getBearerToken = (req) => {
+    
+    const header = req.headers.authorization;
+
+    if(header){
+        if(header.split(' ')[0] === 'bearer' || header.split(' ')[0] === 'token'){
+            return header.split(' ')[1];
+        }
+    }
+    return null;
+}
+
+module.exports = jwtAuth;

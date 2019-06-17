@@ -25,7 +25,7 @@ const findByEmail = (email) => {
 }
 
 module.exports = {
-    create: (req, res, next) => {
+    register: (req, res, next) => {
 
         const user = req.body.user;
         findByEmail(user.email)
@@ -41,7 +41,7 @@ module.exports = {
                 bcrypt.hash(user.password, 10, (err, hash) => {
                     models.User.create({email: user.email, password: hash})
                     .then(newUser => {
-                        res.status(200).send(newUser);
+                        res.status(200).send(newUser.authJWT());
                     })
                     .catch(err => {
                         res.status(400).send(err);
@@ -56,7 +56,7 @@ module.exports = {
         .catch(err => next(err))
     },
 
-    get: (req, res, next) =>{
+    login: (req, res, next) =>{
         const {email, password} = req.body.user;
 
         findByEmail(email)
@@ -74,14 +74,27 @@ module.exports = {
                         error.status = 403;
                         next(error);
                     }else{
-        
-                        res.cookie('token', user.generateJWT(), {httpOnly: true}).sendStatus(200);
+                        res.status(200).send(user.authJWT());
                     }
                 })
             }
         })
         .catch(err => next(err) );
-        
+    },
+
+    get: (req, res, next) => {
+        findByEmail(req.email)
+        .then(user => {
+            res.status(200).send({
+                user: {
+                    email: user.email,
+                    message: "Sucessfully retrieved data",
+                }
+            });
+        })
+        .catch(err => {
+            next(err);
+        })
     }
 }
 
