@@ -2,6 +2,11 @@ const models = require('../models');
 const bcrypt = require('bcrypt');
 const validator = require('email-validator');
 
+/**
+ * Future Goal:
+ * Cookie response should application with more configuration
+ */
+
 const findByEmail = (email) => {
 
     return new Promise((resolve) => {
@@ -20,7 +25,7 @@ const findByEmail = (email) => {
 }
 
 module.exports = {
-    create: (req, res, next) => {
+    register: (req, res, next) => {
 
         const user = req.body.user;
         findByEmail(user.email)
@@ -32,10 +37,11 @@ module.exports = {
                     next(error);
                 }
     
+                
                 bcrypt.hash(user.password, 10, (err, hash) => {
                     models.User.create({email: user.email, password: hash})
                     .then(newUser => {
-                        res.status(200).send(newUser);
+                        res.status(200).send(newUser.authJWT());
                     })
                     .catch(err => {
                         res.status(400).send(err);
@@ -47,9 +53,10 @@ module.exports = {
                 next(error);
             }
         })
+        .catch(err => next(err))
     },
 
-    get: (req, res, next) =>{
+    login: (req, res, next) =>{
         const {email, password} = req.body.user;
 
         findByEmail(email)
@@ -60,18 +67,34 @@ module.exports = {
                 next(error);
 
             }else{
-                bcrypt.compare(password, user.password, (err, result)=>{
+                user.isValidPassword(password)
+                .then(result => {
                     if(!result){
                         const error = new Error('Invalid Password');
                         error.status = 403;
                         next(error);
                     }else{
-                        res.status(400).send(user);
+                        res.status(200).send(user.authJWT());
                     }
-                });
+                })
             }
-        });
-        
+        })
+        .catch(err => next(err) );
+    },
+
+    get: (req, res, next) => {
+        findByEmail(req.email)
+        .then(user => {
+            res.status(200).send({
+                user: {
+                    email: user.email,
+                    message: "Sucessfully retrieved data",
+                }
+            });
+        })
+        .catch(err => {
+            next(err);
+        })
     }
 }
 
